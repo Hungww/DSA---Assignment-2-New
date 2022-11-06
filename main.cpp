@@ -54,10 +54,7 @@ void tc4(){
     cout<<s8.toString();
 
 }
-
-
-
-int main() {
+void tc5(){
     ConcatStringTree s1("a");
     ConcatStringTree::Node* root=s1.getRoot();
     root->ParTree->Insert(18);
@@ -69,5 +66,10 @@ int main() {
 
 
     root->ParTree->print2DUtil();
+}
+
+
+int main() {
+    tc4();
     return 0;
 }

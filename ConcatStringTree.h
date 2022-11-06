@@ -34,90 +34,11 @@ public:
 
         //recur version
     protected:
-#define COUNT 10
-        void print2DUtil(ParNode* root, int space){
-            if (root == NULL)
-                return;
-            space += COUNT;
-
-            print2DUtil(root->pRight, space);
-            cout << endl;
-
-            for (int i = COUNT; i < space; i++)
-                cout << " ";
-            cout << root->KeyID<< " (" << root->h << ") " << "\n";
-
-            print2DUtil(root->pLeft, space);
-        }
-        ParNode* rightRotate(ParNode* root){
-            ParNode* x = root->pLeft;
-
-
-            root->pLeft = x->pRight;
-            x->pRight = root;
-
-            // Thiết lập chiều cao
-            root->h = 1 + max(height(root->pLeft), height(root->pRight));
-            x->h = 1 + max(height(x->pLeft), height(x->pRight));
-
-            // Return x - trả về root mới
-            return x;
-        };
-        ParNode* leftRotate(ParNode* root) {
-            ParNode* y = root->pRight;
-
-            // Bắt đầu quay trái
-            root->pRight = y->pLeft;
-            y->pLeft = root;
-
-            // Thiết lập chiều cao
-            root->h = 1 + max(height(root->pLeft), height(root->pRight));
-            y->h = 1 + max(height(y->pLeft), height(y->pRight));
-
-            // Return y - trả về root mới
-            return y;
-        }
-
-        ParNode* Insert(ParNode* root, int value) {
-            // 1. Insert
-            if (root == NULL)
-                return new ParNode(value); // Trả về Node có height = 1
-            if (value > root->KeyID)
-                root->pRight = Insert(root->pRight, value);
-            else if (value < root->KeyID)
-                root->pLeft = Insert(root->pLeft, value);
-            else
-                return root; // Neu bang thi khong them
-
-            // 2. Set height
-            root->h = 1 + max(height(root->pLeft), height(root->pRight));
-
-            // 3. Rotate
-            int valBalance = height(root->pLeft) - height(root->pRight);
-
-            // Kiểm tra 4 TH xảy ra:
-            // 3.1. Left left
-            if (valBalance > 1 && value < root->pLeft->KeyID)
-                return rightRotate(root);
-
-            // 3.2. Right Right
-            if (valBalance < -1 && value > root->pRight->KeyID)
-                return leftRotate(root);
-
-            // 3.3. Left Right
-            if (valBalance > 1 && value > root->pLeft->KeyID) {
-                root->pLeft = leftRotate(root->pLeft);
-                return rightRotate(root);
-            }
-
-            // 3.4. Right Left
-            if (valBalance < -1 && value < root->pRight->KeyID) {
-                root->pRight = rightRotate(root->pRight);
-                return leftRotate(root);
-            }
-
-            return root;
-        }
+    #define COUNT 10
+        void print2DUtil(ParNode* root, int space);
+        ParNode* rightRotate(ParNode* root);
+        ParNode* leftRotate(ParNode* root);
+        ParNode* Insert(ParNode* root, int value);
 
     public:
         class ParNode{
@@ -135,19 +56,6 @@ public:
 
 
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 public:
