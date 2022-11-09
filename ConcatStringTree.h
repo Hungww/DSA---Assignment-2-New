@@ -14,19 +14,32 @@ public:
 
     class ParentTree{
     public:
+        int size;
         class ParNode;          //PreDefine
     public:
         ParNode* root;
         //base
+
         ParentTree(int ID){
             this->root=new ParNode(ID);
+            size=1;
         }
         int height(ParNode* root){
             if(!root)return 0;
             else return root->h;
         }
-        void Insert(int value){
-            this->root= Insert(this->root,value);
+        int getBalance(ParNode* root) {
+            if (root == nullptr)
+                return 0;
+            return height(root->pLeft) - height(root->pRight);
+        }
+        void insertNode(int value){
+            this->root= insertNode(this->root,value);
+            size++;
+        }
+        void deleteNode(int value){
+            this->root= deleteNode(this->root,value);
+            size--;
         }
         void print2DUtil(){
             print2DUtil(this->root,0);
@@ -35,10 +48,12 @@ public:
         //recur version
     protected:
     #define COUNT 10
+        ParNode* getMaxOfLeft(ParNode* root);
         void print2DUtil(ParNode* root, int space);
         ParNode* rightRotate(ParNode* root);
         ParNode* leftRotate(ParNode* root);
-        ParNode* Insert(ParNode* root, int value);
+        ParNode* insertNode(ParNode* root, int value);
+        ParNode* deleteNode(ParNode* root, int value);
 
     public:
         class ParNode{
@@ -172,6 +187,11 @@ public:
     int getParTreeSize(const string & query) const;
     string getParTreeStringPreOrder(const string & query) const;
 
+    ~ConcatStringTree(){
+        this->root->ParTree->deleteNode(this->root->ID);
+        recurDestructor(this->root);
+    }
+
     int getLL(){
         return this->root->LL;
     }
@@ -188,7 +208,19 @@ protected:
     void toString(Node* root, string& s) const;
     Node* subString(Node* root, int from, int to) const;
     Node* reverse(Node* root) const;                              //Return address of Root of new tree
+    void recurDestructor(Node* &root){
+        if(!root)return;
+        if(root->ParTree->size!=0)return;
+        else{
+            if(root->pLeft)root->pLeft->ParTree->deleteNode(root->ID);
+            if(root->pRight)root->pRight->ParTree->deleteNode(root->ID);
+            recurDestructor(root->pLeft);
+            recurDestructor(root->pRight);
 
+            delete root;
+            root= nullptr;
+        }
+    }
     int getParTreeSize(Node* root) const;
     string getParTreeStringPreOrder(Node* root) const;
 

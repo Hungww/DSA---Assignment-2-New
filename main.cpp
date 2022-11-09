@@ -13,10 +13,10 @@ void tc2(){
     ConcatStringTree* s1= new ConcatStringTree(d1->concat(*d2));
     ConcatStringTree* s2= new ConcatStringTree(d3->concat(*d4));
     ConcatStringTree* s3= new ConcatStringTree(s1->concat(*s2));
-    cout<< s3->toString()<<endl;
-    ConcatStringTree s4= s3->subString(0,17);
-    cout<<s4.toString()<<endl;
-    cout<<s4.toStringPreOrder();
+    delete s1;
+    delete s3;
+    delete d1;
+    cout<<endl;
 
 }
 void tc3(){
@@ -57,19 +57,35 @@ void tc4(){
 void tc5(){
     ConcatStringTree s1("a");
     ConcatStringTree::Node* root=s1.getRoot();
-    root->ParTree->Insert(18);
-    root->ParTree->Insert(12);
-    root->ParTree->Insert(30);
-    root->ParTree->Insert(25);
-    root->ParTree->Insert(69);
-    root->ParTree->Insert(23);
-
-
+    root->ParTree->insertNode(18);
+    root->ParTree->insertNode(12);
+    root->ParTree->insertNode(30);
+    root->ParTree->insertNode(25);
+    root->ParTree->insertNode(69);
+    root->ParTree->insertNode(23);
+    root->ParTree->print2DUtil();
+    cout << "\n ------------Delete 12----------- \n";
+    root->ParTree->deleteNode(12);
+    root->ParTree->print2DUtil();
+}
+void tc6(){
+    ConcatStringTree s1("a");
+    ConcatStringTree::Node* root=s1.getRoot();
+    root->ParTree->insertNode(10);
+    root->ParTree->insertNode(5);
+    root->ParTree->insertNode(15);
+    root->ParTree->insertNode(3);
+    root->ParTree->insertNode(12);
+    root->ParTree->insertNode(17);
+    root->ParTree->insertNode(11);
+    root->ParTree->print2DUtil();
+    cout << "\n ------------Delete 3----------- \n";
+    root->ParTree->deleteNode(3);
     root->ParTree->print2DUtil();
 }
 
 
 int main() {
-    tc4();
+    tc6();
     return 0;
 }

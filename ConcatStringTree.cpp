@@ -1,5 +1,5 @@
 #include "ConcatStringTree.h"
-int ConcatStringTree::Node::CURRENT_ID=0;
+int ConcatStringTree::Node::CURRENT_ID=1;
 ConcatStringTree::ConcatStringTree(const char * s){
     this->root= new Node(s);
 }
@@ -40,6 +40,8 @@ ConcatStringTree ConcatStringTree::concat(const ConcatStringTree &otherS) const 
     temp.root->pRight=otherS.root;
     temp.root->len=this->length()+otherS.length();
     temp.root->LL=temp.root->pLeft->len;
+    temp.root->pLeft->ParTree->insertNode(temp.root->ID);
+    temp.root->pRight->ParTree->insertNode(temp.root->ID);
     return temp;
 }
 
@@ -153,70 +155,135 @@ ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::rightRotate
     root->pLeft = x->pRight;
     x->pRight = root;
 
-    // Thiết lập chiều cao
+
     root->h = 1 + max(height(root->pLeft), height(root->pRight));
     x->h = 1 + max(height(x->pLeft), height(x->pRight));
 
-    // Return x - trả về root mới
+
     return x;
 }
 
 ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::leftRotate(ConcatStringTree::ParentTree::ParNode *root){
     ParNode* y = root->pRight;
 
-// Bắt đầu quay trái
+
     root->pRight = y->pLeft;
     y->pLeft = root;
 
-// Thiết lập chiều cao
+
     root->h = 1 + max(height(root->pLeft), height(root->pRight));
     y->h = 1 + max(height(y->pLeft), height(y->pRight));
 
-// Return y - trả về root mới
+
     return y;
 }
 
-ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::Insert(ConcatStringTree::ParentTree::ParNode *root,
-                                                                            int value) {
+ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::insertNode(ConcatStringTree::ParentTree::ParNode *root,
+                                                                                int value) {
 
-    // 1. Insert
+
     if (!root)
-        return new ParNode(value); // Trả về Node có height = 1
+        return new ParNode(value);
     if (value > root->KeyID)
-        root->pRight = Insert(root->pRight, value);
-    else if (value < root->KeyID)
-        root->pLeft = Insert(root->pLeft, value);
-    else
-        return root; // Neu bang thi khong them
+        root->pRight = insertNode(root->pRight, value);
+        else if (value < root->KeyID)
+            root->pLeft = insertNode(root->pLeft, value);
+        else if(value==root->KeyID) //No duplicate accept
+            return root;
+        else return root; //Never happen
 
-    // 2. Set height
-    root->h = 1 + max(height(root->pLeft), height(root->pRight));
 
-    // 3. Rotate
-    int valBalance = height(root->pLeft) - height(root->pRight);
+    int leftH=height(root->pLeft);
+    int rightH=height(root->pRight);
+    if(leftH>rightH)root->h=leftH+1;
+        else root->h=rightH+1;
 
-    // Kiểm tra 4 TH xảy ra:
-    // 3.1. Left left
-    if (valBalance > 1 && value < root->pLeft->KeyID)
+
+
+    int valBalance = getBalance(root);
+
+
+    if (valBalance > 1 && getBalance(root->pLeft)>=0)
         return rightRotate(root);
 
-    // 3.2. Right Right
-    if (valBalance < -1 && value > root->pRight->KeyID)
+
+    if (valBalance < -1 && getBalance(root->pRight)>=0)
         return leftRotate(root);
 
-    // 3.3. Left Right
-    if (valBalance > 1 && value > root->pLeft->KeyID) {
+
+    if (valBalance > 1 && getBalance(root->pLeft)<0) {
         root->pLeft = leftRotate(root->pLeft);
         return rightRotate(root);
     }
 
-    // 3.4. Right Left
-    if (valBalance < -1 && value < root->pRight->KeyID) {
+
+    if (valBalance < -1 && getBalance(root->pRight)<0) {
         root->pRight = rightRotate(root->pRight);
         return leftRotate(root);
     }
 
     return root;
 }
+ConcatStringTree::ParentTree::ParNode* ConcatStringTree::ParentTree::getMaxOfLeft(
+        ConcatStringTree::ParentTree::ParNode *root){
+    if(!root->pRight)return root;
+    else return getMaxOfLeft(root->pRight);
+};
+ConcatStringTree::ParentTree::ParNode* ConcatStringTree::ParentTree::deleteNode(ConcatStringTree::ParentTree::ParNode *root,
+                                                                            int value){
+    if(!root)return root;
+    else if(root->KeyID > value)root->pLeft=deleteNode(root->pLeft,value);
+    else if(root->KeyID < value)root->pRight=deleteNode(root->pRight,value);
+    else{
+        if(root->pLeft && root->pRight){
+            ParNode* temp= getMaxOfLeft(root->pLeft);
+            root->KeyID=temp->KeyID;
+            root->pLeft=deleteNode(root->pLeft, temp->KeyID);
+            return root;
+        }
+        else if(!root->pLeft){
+            ParNode* temp= root->pRight;
+            delete root;
+            return temp;
+        }
+        else if(!root->pRight){
+            ParNode* temp= root->pLeft;
+            delete root;
+            return temp;
+        }
+    }
+
+    int leftH=height(root->pLeft);
+    int rightH=height(root->pRight);
+    if(leftH>rightH)root->h=leftH+1;
+    else root->h=rightH+1;
+
+    int valBalance = getBalance(root);
+
+
+    if (valBalance > 1 && getBalance(root->pLeft) >= 0)
+        return rightRotate(root);
+
+
+    if (valBalance < -1 && getBalance(root->pRight) <= 0)
+        return leftRotate(root);
+
+
+    if (valBalance > 1 && getBalance(root->pLeft) < 0){
+        root->pLeft = leftRotate(root->pLeft);
+        return rightRotate(root);
+    }
+
+
+    if (valBalance < -1 && getBalance(root->pRight) > 0){
+        root->pRight = rightRotate(root->pRight);
+        return leftRotate(root);
+    }
+
+
+    return root;
+
+}
+
 
 
