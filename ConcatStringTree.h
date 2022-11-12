@@ -7,22 +7,25 @@ class ConcatStringTree {
 
 public:
     class Node;
-protected:
+public:
     Node* root;
 
 public:
 
     class ParentTree{
     public:
-        int size;
+        int Size;
         class ParNode;          //PreDefine
     public:
         ParNode* root;
         //base
-
+        ParentTree(){
+            this->root= nullptr;
+            Size=0;
+        }
         ParentTree(int ID){
             this->root=new ParNode(ID);
-            size=1;
+            Size=1;
         }
         int height(ParNode* root){
             if(!root)return 0;
@@ -35,25 +38,44 @@ public:
         }
         void insertNode(int value){
             this->root= insertNode(this->root,value);
-            size++;
+            Size++;
         }
         void deleteNode(int value){
             this->root= deleteNode(this->root,value);
-            size--;
+            Size--;
         }
-        void print2DUtil(){
-            print2DUtil(this->root,0);
+
+
+        int size() const{
+            return this->Size;
+        }
+
+        string toStringPreOrder()const{
+            string s="";
+            s+="ParentsTree[";
+            toStringPreOrder(this->root, s);
+            s.erase(s.length()-1,1);
+            s+="]";
+            return s;
+        };
+
+
+
+        ~ParentTree(){
+            if(this->root)cout<<"Delete a Node which still has ParNode";
+
         }
 
         //recur version
     protected:
     #define COUNT 10
         ParNode* getMaxOfLeft(ParNode* root);
-        void print2DUtil(ParNode* root, int space);
+
         ParNode* rightRotate(ParNode* root);
         ParNode* leftRotate(ParNode* root);
         ParNode* insertNode(ParNode* root, int value);
         ParNode* deleteNode(ParNode* root, int value);
+        void toStringPreOrder(ParNode* root, string& s)const;
 
     public:
         class ParNode{
@@ -71,6 +93,12 @@ public:
 
 
     };
+
+
+
+    //NOTE
+
+
 
 
 public:
@@ -94,6 +122,15 @@ public:
             CURRENT_ID++;
             ParTree= new ParentTree(this->ID);
 
+        }
+        Node(int flag){
+            LL=0;
+            len=0;
+            data=nullptr;
+            pLeft=pRight= nullptr;
+            ID=CURRENT_ID;
+            CURRENT_ID++;
+            ParTree= new ParentTree();
         }
         explicit Node(const char* s){
             LL=0;
@@ -127,6 +164,10 @@ public:
             ParTree= new ParentTree(this->ID);
 
 
+        }
+        ~Node(){
+            delete ParTree;
+            delete data;
         }
 
 
@@ -167,24 +208,33 @@ public:
     };
     string toString() const{
         string s="";
+        s+="ConcatStringTree[";
+
         toString(this->root,s);
+        s+="]";
         return s;
     };
     ConcatStringTree concat(const ConcatStringTree & otherS) const;
     ConcatStringTree subString(int from, int to) const{
         ConcatStringTree temp(1);
-        temp.root= subString(this->root,from,to-1);
+        temp.root= subString(this->root,from,to-1,0);
         temp.reKey();
         return temp;
     };
     ConcatStringTree reverse() const{
         ConcatStringTree temp(1);
-        temp.root= reverse(this->root);
+        temp.root= reverse(this->root,0);
         temp.reKey();
         return temp;
     };
 
-    int getParTreeSize(const string & query) const;
+    int getParTreeSize(const string & query) const{
+        int slen= query.length();
+        for(int i=0;i<slen;i++){
+            if(query[i]!='l' && query[i]!='r') throw runtime_error("Invalid character of query");
+        }
+        return getParTreeSize(this->root,query,0,slen);
+    };
     string getParTreeStringPreOrder(const string & query) const;
 
     ~ConcatStringTree(){
@@ -206,23 +256,11 @@ protected:
     int indexOf(Node* root, char& c, int curIndex);
     void toStringPreOrder(Node* root, string& s) const;
     void toString(Node* root, string& s) const;
-    Node* subString(Node* root, int from, int to) const;
-    Node* reverse(Node* root) const;                              //Return address of Root of new tree
-    void recurDestructor(Node* &root){
-        if(!root)return;
-        if(root->ParTree->size!=0)return;
-        else{
-            if(root->pLeft)root->pLeft->ParTree->deleteNode(root->ID);
-            if(root->pRight)root->pRight->ParTree->deleteNode(root->ID);
-            recurDestructor(root->pLeft);
-            recurDestructor(root->pRight);
-
-            delete root;
-            root= nullptr;
-        }
-    }
-    int getParTreeSize(Node* root) const;
-    string getParTreeStringPreOrder(Node* root) const;
+    Node* subString(Node* root, int from, int to, int k) const;
+    Node* reverse(Node* root,int k) const;                              //Return address of Root of new tree
+    void recurDestructor(Node* &root);
+    int getParTreeSize(Node* root,const string& s,int cur, int len) const;
+    string getParTreeStringPreOrder(Node* root,const string& s) const;
 
     int reLen(Node* root){
         if(!root)return 0;
@@ -255,22 +293,81 @@ private:
     double lambda;
     double alpha;
     int initSize;
+    HashConfig(int p, double c1, double c2,double lambda, double alpha, int initSize){
+        this->p=p;
+        this->c1=c1;    this->c2=c2;
+        this->lambda=lambda;
+        this->alpha=alpha;
+        this->initSize=initSize;
+    }
 
     friend class ReducedConcatStringTree;
+    friend class LitStringHash;
+};
+
+class LitStringHash {
+public://PreDefine
+    class LitString;
+public:
+    int LastInsertedIndex;
+    LitString** HashTable;
+    int currentsize;
+    const HashConfig*  CONFIG;
+
+public:
+    LitStringHash(const HashConfig & hashConfig){
+        CONFIG=&hashConfig;
+        LastInsertedIndex=-1;
+        HashTable= new LitString* [CONFIG->initSize];
+        currentsize=CONFIG->initSize;
+    };
+    int getLastInsertedIndex() const;
+    string toString() const;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //Data
+    class LitString{
+    public:
+        char* data;
+        int len;
+        int noRf;
+
+    public:
+
+        LitString(const char* s){
+            noRf=1;
+            string stemp= s;
+            this->len=stemp.size();
+            data= new char[len+1];
+            for(int i=0; i<len; i++){
+                data[i]=stemp[i];
+            }
+            data[len]='\0';
+
+        };
+
+    };
+
 };
 
 class ReducedConcatStringTree /* */ {
-
 public:
-    class LitStringHash {
-    public:
-        LitStringHash(const HashConfig & hashConfig);
-        int getLastInsertedIndex() const;
-        string toString() const;
-    };
-
-public:
-    static LitStringHash litStringHash;
+    ReducedConcatStringTree(const char * s, LitStringHash * litStringHash);
+    LitStringHash * litStringHash;
 };
+
+
 
 #endif // __CONCAT_STRING_TREE_H__

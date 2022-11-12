@@ -15,11 +15,10 @@ int ConcatStringTree::length() const {
 void ConcatStringTree::toString(ConcatStringTree::Node *root, std::string &s) const {
     if(!root)return;
     if(root->data){
-        s+="(";
+
         s+=root->data;
-        s+=",";
-        s+= to_string(root->len);
-        s+=")  ";
+
+
     }
     toString(root->pLeft,s);
     toString(root->pRight,s);
@@ -84,9 +83,13 @@ void ConcatStringTree::toStringPreOrder(ConcatStringTree::Node *root, std::strin
 
 }
 
-ConcatStringTree::Node* ConcatStringTree::reverse(ConcatStringTree::Node *root) const {
+ConcatStringTree::Node* ConcatStringTree::reverse(ConcatStringTree::Node *root,int k) const {
     if(!root)return nullptr;
-    Node* newNode= new Node();
+    Node* newNode;
+    if(!k)
+        newNode= new Node();
+    else
+        newNode= new Node(1);
     if(root->data){
         int size= root->len;
         char* tmp= new char[size+1];
@@ -100,15 +103,21 @@ ConcatStringTree::Node* ConcatStringTree::reverse(ConcatStringTree::Node *root) 
 
     }
 
-    newNode->pLeft= reverse(root->pRight);
-    newNode->pRight= reverse(root->pLeft);
+    newNode->pLeft= reverse(root->pRight,1);
+    if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
+    newNode->pRight= reverse(root->pLeft,1);
+    if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
 
     return newNode;
 }
 
-ConcatStringTree::Node* ConcatStringTree::subString(ConcatStringTree::Node *root, int from, int to) const {
+ConcatStringTree::Node* ConcatStringTree::subString(ConcatStringTree::Node *root, int from, int to, int k) const {
     if (!root)return nullptr;
-    Node *newNode = new Node();
+    Node* newNode;
+    if(!k)
+        newNode= new Node();
+    else
+        newNode= new Node(1);
     if (root->data) {
         int size = to - from + 1;
         char *tmp = new char[size+1];
@@ -122,38 +131,30 @@ ConcatStringTree::Node* ConcatStringTree::subString(ConcatStringTree::Node *root
         return newNode;
     }
     if(to<root->LL){
-        newNode->pLeft=subString(root->pLeft,from,to);
+        newNode->pLeft=subString(root->pLeft,from,to,1);
+        if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
     }
     else if(from>=root->LL){
-        newNode->pRight= subString(root->pRight,from-root->LL,to-root->LL);
+        newNode->pRight= subString(root->pRight,from-root->LL,to-root->LL,1);
+        if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
     }
     else{
-        newNode->pLeft= subString(root->pLeft,from,root->LL-1);
-        newNode->pRight= subString(root->pRight,0,to-root->LL);
+        newNode->pLeft= subString(root->pLeft,from,root->LL-1,1);
+        if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
+        newNode->pRight= subString(root->pRight,0,to-root->LL,1);
+        if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
     }
     return newNode;
 }
 
 //ParentTree
-void ConcatStringTree::ParentTree::print2DUtil(ParNode* root, int space) {
-        if (root == NULL)
-            return;
-        space += COUNT;
 
-        print2DUtil(root->pRight, space);
-        cout << endl;
-
-        for (int i = COUNT; i < space; i++)
-            cout << " ";
-        cout << root->KeyID<< " (" << root->h << ") " << "\n";
-
-        print2DUtil(root->pLeft, space);
-    }
 
 ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::rightRotate(ConcatStringTree::ParentTree::ParNode *root) {
     ParNode* x = root->pLeft;
     root->pLeft = x->pRight;
     x->pRight = root;
+
 
 
     root->h = 1 + max(height(root->pLeft), height(root->pRight));
@@ -207,7 +208,7 @@ ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::insertNode(
         return rightRotate(root);
 
 
-    if (valBalance < -1 && getBalance(root->pRight)>=0)
+    if (valBalance < -1 && getBalance(root->pRight)<=0)
         return leftRotate(root);
 
 
@@ -217,7 +218,7 @@ ConcatStringTree::ParentTree::ParNode *ConcatStringTree::ParentTree::insertNode(
     }
 
 
-    if (valBalance < -1 && getBalance(root->pRight)<0) {
+    if (valBalance < -1 && getBalance(root->pRight)>0) {
         root->pRight = rightRotate(root->pRight);
         return leftRotate(root);
     }
@@ -283,6 +284,45 @@ ConcatStringTree::ParentTree::ParNode* ConcatStringTree::ParentTree::deleteNode(
 
     return root;
 
+}void ConcatStringTree::recurDestructor(ConcatStringTree::Node *&root) {
+    {
+        if(!root)return;
+        if(root->ParTree->Size!=0)return;
+        else{
+            if(root->pLeft)root->pLeft->ParTree->deleteNode(root->ID);
+            if(root->pRight)root->pRight->ParTree->deleteNode(root->ID);
+            recurDestructor(root->pLeft);
+            recurDestructor(root->pRight);
+
+            delete root;
+            root= nullptr;
+        }
+    }
+}
+
+void ConcatStringTree::ParentTree::toStringPreOrder(ConcatStringTree::ParentTree::ParNode *root,
+                                                      std::string &s) const {
+    if(!root)return;
+
+    //Process
+    s+="(id=";
+    s+= to_string(root->KeyID);
+    s+=");";
+    //End Process
+
+    toStringPreOrder(root->pLeft,s);
+    toStringPreOrder(root->pRight,s);
+}
+
+int ConcatStringTree::getParTreeSize(ConcatStringTree::Node* root, const std::string &s, int cur, int len) const {
+    if(!root)throw runtime_error("Invalid query: reaching NULL");
+    if(cur<len){
+        if(s[cur]=='l')return getParTreeSize(root->pLeft,s, cur+1,len);
+        else return getParTreeSize(root->pRight,s, cur+1,len);
+    }
+    else{
+        return root->ParTree->size();
+    }
 }
 
 
