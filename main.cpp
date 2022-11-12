@@ -33,9 +33,7 @@ void tc3(){
     ConcatStringTree* s6=new ConcatStringTree( s2->concat(*e));
     ConcatStringTree* s7=new ConcatStringTree(s5->concat(*s6));
     ConcatStringTree* s8=new ConcatStringTree(s7->reverse());
-    for(int i=0;i<9;i++){
-        cout<<s8->get(i);
-    }
+    cout<<s7->length();
 }
 void tc4(){
     ConcatStringTree a("A");
@@ -135,18 +133,21 @@ void tc9(){
     delete s4_5;
 
 }
-int main() {
-
-    //TODO: Delete utility funct (PrintTree,...)
+void tc10(){
     ConcatStringTree s1("Hello");
     ConcatStringTree s2(",_t");
     ConcatStringTree s3 = s1.concat(s2);
     cout << s3.toStringPreOrder() << endl;
     cout << s3.toString() << endl;
-     cout << s3.subString(5, 6).toString() << endl;
+    cout << s3.subString(5, 6).toString() << endl;
     cout << s3.reverse().toString() << endl;
     cout<<s3.toString()<<endl;
     cout<<s3.getParTreeSize("lr");
+}
+int main() {
+
+    //TODO: Delete utility funct (PrintTree,...)
+    tc3();
     return 0;
 
 }

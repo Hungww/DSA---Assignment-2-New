@@ -111,13 +111,14 @@ public:
         Node* pLeft;
         Node* pRight;
         ParentTree* ParTree;
-
         int ID;
+
         Node(){
             LL=0;
             len=0;
             data=nullptr;
             pLeft=pRight= nullptr;
+            if(CURRENT_ID==10000000)throw overflow_error("Id is overflow!");
             ID=CURRENT_ID;
             CURRENT_ID++;
             ParTree= new ParentTree(this->ID);
@@ -216,6 +217,8 @@ public:
     };
     ConcatStringTree concat(const ConcatStringTree & otherS) const;
     ConcatStringTree subString(int from, int to) const{
+        if(from<0 || to>this->length())throw out_of_range("Index of string is invalid!");
+        if(from>=to) throw logic_error("Invalid range!");
         ConcatStringTree temp(1);
         temp.root= subString(this->root,from,to-1,0);
         temp.reKey();
@@ -235,7 +238,13 @@ public:
         }
         return getParTreeSize(this->root,query,0,slen);
     };
-    string getParTreeStringPreOrder(const string & query) const;
+    string getParTreeStringPreOrder(const string & query) const{
+        int slen= query.length();
+        for(int i=0;i<slen;i++){
+            if(query[i]!='l' && query[i]!='r') throw runtime_error("Invalid character of query");
+        }
+        return getParTreeStringPreOrder(this->root,query,0,slen);
+    };
 
     ~ConcatStringTree(){
         this->root->ParTree->deleteNode(this->root->ID);
@@ -260,7 +269,7 @@ protected:
     Node* reverse(Node* root,int k) const;                              //Return address of Root of new tree
     void recurDestructor(Node* &root);
     int getParTreeSize(Node* root,const string& s,int cur, int len) const;
-    string getParTreeStringPreOrder(Node* root,const string& s) const;
+    string getParTreeStringPreOrder(Node* root,const string& s,int cur, int len) const;
 
     int reLen(Node* root){
         if(!root)return 0;

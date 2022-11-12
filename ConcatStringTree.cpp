@@ -324,6 +324,16 @@ int ConcatStringTree::getParTreeSize(ConcatStringTree::Node* root, const std::st
         return root->ParTree->size();
     }
 }
+string ConcatStringTree::getParTreeStringPreOrder(ConcatStringTree::Node* root, const std::string &s, int cur, int len) const {
+    if(!root)throw runtime_error("Invalid query: reaching NULL");
+    if(cur<len){
+        if(s[cur]=='l')return getParTreeStringPreOrder(root->pLeft,s, cur+1,len);
+        else return getParTreeStringPreOrder(root->pRight,s, cur+1,len);
+    }
+    else{
+        return root->ParTree->toStringPreOrder();
+    }
+}
 
 
 
