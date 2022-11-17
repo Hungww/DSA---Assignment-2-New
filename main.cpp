@@ -144,10 +144,63 @@ void tc10(){
     cout<<s3.toString()<<endl;
     cout<<s3.getParTreeSize("lr");
 }
+void tc11(){
+    HashConfig hashConfig(1,2,3,5,6,8);
+    LitStringHash* LSH= new LitStringHash(hashConfig);
+
+
+
+    ReducedConcatStringTree* a= new ReducedConcatStringTree("A",LSH);
+    ReducedConcatStringTree* b= new ReducedConcatStringTree("B",LSH);
+    ReducedConcatStringTree* c= new ReducedConcatStringTree("C",LSH);
+    ReducedConcatStringTree* d= new ReducedConcatStringTree("D",LSH);
+    ReducedConcatStringTree* e= new ReducedConcatStringTree("E",LSH);
+    ReducedConcatStringTree* s1=new ReducedConcatStringTree(a->concat(*b));
+    ReducedConcatStringTree* s2=new ReducedConcatStringTree(b->concat(*c));
+    ReducedConcatStringTree* s3=new ReducedConcatStringTree( s1->concat(*s2));
+    ReducedConcatStringTree* s4=new ReducedConcatStringTree( b->concat(*d));
+    ReducedConcatStringTree* s5=new ReducedConcatStringTree(s3->concat(*s4));
+    ReducedConcatStringTree* s6=new ReducedConcatStringTree( s2->concat(*e));
+    ReducedConcatStringTree* s7=new ReducedConcatStringTree(s5->concat(*s6));
+    cout<<s7->toString()<<endl;
+    ReducedConcatStringTree* s8= new ReducedConcatStringTree(s7->reverse());
+    cout<< s7->toStringPreOrder()<<endl;
+
+}
+void tc12(){
+    HashConfig hashConfig(1,2,3,5,6,8);
+    LitStringHash* LSH= new LitStringHash(hashConfig);
+    ReducedConcatStringTree* a= new ReducedConcatStringTree("A",LSH);
+    ReducedConcatStringTree* b= new ReducedConcatStringTree("B",LSH);
+    ReducedConcatStringTree* c= new ReducedConcatStringTree("A",LSH);
+}
 int main() {
 
-    //TODO: Delete utility funct (PrintTree,...)
-    tc3();
+    HashConfig hashConfig(
+            2,
+            0.5,
+            0.5,
+            0.75,
+            2,
+            4
+    );
+    LitStringHash * litStringHash = new LitStringHash(hashConfig);
+    ReducedConcatStringTree * s1 = new ReducedConcatStringTree("a", litStringHash);
+    ReducedConcatStringTree * s2 = new ReducedConcatStringTree("bb", litStringHash);
+
+    cout << s1->toString() << endl;
+    cout << s2->toString() << endl;
+    ReducedConcatStringTree * s3 = new ReducedConcatStringTree("bb", litStringHash);
+
+    cout << litStringHash->getLastInsertedIndex() << endl;
+    cout << litStringHash->toString() << endl;
+
+    delete litStringHash;
+    delete s3;
+    delete s1;
+    delete s2;
+
+
     return 0;
 
 }

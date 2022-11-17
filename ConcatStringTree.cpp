@@ -334,6 +334,17 @@ string ConcatStringTree::getParTreeStringPreOrder(ConcatStringTree::Node* root, 
         return root->ParTree->toStringPreOrder();
     }
 }
+ReducedConcatStringTree ReducedConcatStringTree::concat(const ReducedConcatStringTree &otherS) const {
+    ReducedConcatStringTree temp(this->litStringHash);
+    temp.root->pLeft=this->root;
+    temp.root->pRight=otherS.root;
+    temp.root->len=this->length()+otherS.length();
+    temp.root->LL=temp.root->pLeft->len;
+    temp.root->pLeft->ParTree->insertNode(temp.root->ID);
+    temp.root->pRight->ParTree->insertNode(temp.root->ID);
+    return temp;
+
+}
 
 
 

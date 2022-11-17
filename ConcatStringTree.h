@@ -112,6 +112,7 @@ public:
         Node* pRight;
         ParentTree* ParTree;
         int ID;
+        bool delData;
 
         Node(){
             LL=0;
@@ -122,6 +123,7 @@ public:
             ID=CURRENT_ID;
             CURRENT_ID++;
             ParTree= new ParentTree(this->ID);
+            delData=1;
 
         }
         Node(int flag){
@@ -132,6 +134,7 @@ public:
             ID=CURRENT_ID;
             CURRENT_ID++;
             ParTree= new ParentTree();
+            delData=1;
         }
         explicit Node(const char* s){
             LL=0;
@@ -146,6 +149,7 @@ public:
             ID=CURRENT_ID;
             CURRENT_ID++;
             ParTree= new ParentTree(this->ID);
+            delData=1;
 
         }
         //Copy data from another Node
@@ -163,11 +167,13 @@ public:
             ID=CURRENT_ID;
             CURRENT_ID++;
             ParTree= new ParentTree(this->ID);
+            delData=1;
 
 
         }
-        ~Node(){
+        virtual ~Node(){
             delete ParTree;
+            if(delData)
             delete data;
         }
 
@@ -210,13 +216,14 @@ public:
     string toString() const{
         string s="";
         s+="ConcatStringTree[";
-
+        s+='"';
         toString(this->root,s);
+        s+='"';
         s+="]";
         return s;
     };
-    ConcatStringTree concat(const ConcatStringTree & otherS) const;
-    ConcatStringTree subString(int from, int to) const{
+     ConcatStringTree concat(const ConcatStringTree & otherS) const;
+     ConcatStringTree subString(int from, int to) const{
         if(from<0 || to>this->length())throw out_of_range("Index of string is invalid!");
         if(from>=to) throw logic_error("Invalid range!");
         ConcatStringTree temp(1);
@@ -224,7 +231,7 @@ public:
         temp.reKey();
         return temp;
     };
-    ConcatStringTree reverse() const{
+     ConcatStringTree reverse() const{
         ConcatStringTree temp(1);
         temp.root= reverse(this->root,0);
         temp.reKey();
@@ -265,8 +272,8 @@ protected:
     int indexOf(Node* root, char& c, int curIndex);
     void toStringPreOrder(Node* root, string& s) const;
     void toString(Node* root, string& s) const;
-    Node* subString(Node* root, int from, int to, int k) const;
-    Node* reverse(Node* root,int k) const;                              //Return address of Root of new tree
+     Node* subString(Node* root, int from, int to, int k) const;
+     Node* reverse(Node* root,int k) const;                              //Return address of Root of new tree
     void recurDestructor(Node* &root);
     int getParTreeSize(Node* root,const string& s,int cur, int len) const;
     string getParTreeStringPreOrder(Node* root,const string& s,int cur, int len) const;
@@ -296,7 +303,7 @@ protected:
 class ReducedConcatStringTree; // forward declaration
 
 class HashConfig {
-private:
+public:
     int p;
     double c1, c2;
     double lambda;
@@ -315,23 +322,180 @@ private:
 };
 
 class LitStringHash {
-public://PreDefine
+public:
     class LitString;
 public:
     int LastInsertedIndex;
     LitString** HashTable;
     int currentsize;
-    const HashConfig*  CONFIG;
+    int capacity;
+
+
+    int p;
+    double c1, c2;
+    double lambda;
+    double alpha;
+    int initSize;
 
 public:
     LitStringHash(const HashConfig & hashConfig){
-        CONFIG=&hashConfig;
+        this->p=hashConfig.p;
+        this->c1=hashConfig.c1;    this->c2=hashConfig.c2;
+        this->lambda=hashConfig.lambda;
+        this->alpha=hashConfig.alpha;
+        this->initSize=hashConfig.initSize;
         LastInsertedIndex=-1;
-        HashTable= new LitString* [CONFIG->initSize];
-        currentsize=CONFIG->initSize;
+        HashTable= new LitString* [this->initSize];
+        currentsize=0;
+        capacity=this->initSize;
+        for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
     };
-    int getLastInsertedIndex() const;
-    string toString() const;
+    ~LitStringHash(){
+        if(this->currentsize==0){
+            for(int i=0;i<this->capacity;i++)delete HashTable[i];
+            delete[] HashTable;
+        }
+    }
+    int sqr(int x) {
+        return x*x;
+    }
+    int pow(int a, int b) {
+        if (b == 0) return 1;
+        else
+        if (b % 2 == 0)
+            return sqr(pow(a, b/2));
+        else
+            return a * (sqr(pow(a, b/2)));
+    }
+    int setKey(const char* s){
+        int key=0;
+        string str(s);
+        int len=str.length();
+
+        for(int i=0;i<len;i++){
+            key+=str[i] * pow(this->p,i);
+        }
+        return  key;
+    }
+    int HashKey(const char* s){
+        int key;
+        string str(s);
+        int len=str.length();
+
+        for(int i=0;i<len;i++){
+            key+=str[i] * pow(this->p,i);
+        }
+        key%=this->capacity;
+        return key;
+    }
+    int HashKey(int key)const{
+        key%=this->capacity;
+        return key;
+    }
+
+    void reHash(){
+        this->capacity= this->capacity * this->alpha;
+        LitString** oldTable= this->HashTable;
+        this->HashTable=new LitString* [this->capacity];
+    }
+    LitString* Insert(const char* s){
+        if(this->HashTable == nullptr){
+            HashTable= new LitString* [this->initSize];
+            currentsize=0;
+            capacity=this->initSize;
+            for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
+        }
+
+        int key= setKey(s);
+        int hashIndex= HashKey(key);
+        string str1(s);
+        int idx=0;
+
+        double temp=0;
+        for(int i=0;i<= this->capacity;i++){
+            temp=hashIndex + this->c1*i + this->c2*i*i;
+            idx=(int)temp;
+            idx=idx%this->capacity;
+            if(HashTable[idx]==nullptr){
+                HashTable[idx]= new LitString(s,key);
+                this->LastInsertedIndex=idx;
+                currentsize++;
+                return HashTable[idx];
+                break;
+            }
+            else if(HashTable[idx]){
+                string str2(HashTable[idx]->data);
+                if(str1==str2){
+                    HashTable[idx]->noRf+=1;
+                    return HashTable[idx];
+                }
+
+
+            }
+        }
+
+
+    }
+    void Remove(LitString* target){
+        for(int i=0;i< this->capacity;i++){
+            if(HashTable[i]==target && HashTable[i]->noRf==0){
+                delete HashTable[i];
+                HashTable[i]=nullptr;
+                this->currentsize--;
+                break;
+            }
+
+        }
+        if(this->currentsize==0){
+            delete[] this->HashTable;
+            this->HashTable= nullptr;
+        }
+    }
+    LitString* InsertForRehash(const char* s){
+        if(this->HashTable == nullptr){
+            HashTable= new LitString* [this->initSize];
+            currentsize=0;
+            capacity=this->initSize;
+            for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
+        }
+        int key= setKey(s);
+        int hashIndex= HashKey(key);
+        string str1(s);
+        int idx=0;
+
+        double temp=0;
+        for(int i=0;i<= this->capacity;i++){
+            temp=hashIndex + this->c1*i + this->c2*i*i;
+            idx=(int)temp;
+            idx=idx%this->capacity;
+            if(HashTable[idx]==nullptr){
+                HashTable[idx]= new LitString(s,key);
+                currentsize++;
+                return HashTable[idx];
+                break;
+            }
+            else if(HashTable[idx]){
+                string str2(HashTable[idx]->data);
+                if(str1==str2){
+                    HashTable[idx]->noRf+=1;
+                    return HashTable[idx];
+                }
+
+
+            }
+        }
+
+
+    }
+
+
+    int getLastInsertedIndex() const{
+        return this->LastInsertedIndex;
+    };
+    string toString() const{
+        string s="a";
+        return s;
+    };
 
 
 
@@ -350,12 +514,13 @@ public:
     class LitString{
     public:
         char* data;
+        int key;
         int len;
         int noRf;
 
     public:
 
-        LitString(const char* s){
+        LitString(const char* s, int key){
             noRf=1;
             string stemp= s;
             this->len=stemp.size();
@@ -364,17 +529,158 @@ public:
                 data[i]=stemp[i];
             }
             data[len]='\0';
+            this->key=key;
+
 
         };
+        ~LitString(){
+            delete this->data;
+        }
+
 
     };
 
 };
 
-class ReducedConcatStringTree /* */ {
-public:
-    ReducedConcatStringTree(const char * s, LitStringHash * litStringHash);
+class ReducedConcatStringTree : public ConcatStringTree{
+public:     class RNode;
+    //Base
+    ReducedConcatStringTree(LitStringHash* litStringHash, int i):ConcatStringTree(1){
+        this->litStringHash=litStringHash;
+    }
+    ReducedConcatStringTree(LitStringHash* litStringHash):ConcatStringTree(1){
+        this->root= new RNode();
+        this->litStringHash=litStringHash;
+    }
+     ReducedConcatStringTree(const char * s, LitStringHash* litStringHash):ConcatStringTree(1){
+        this->root= new RNode(s,litStringHash);
+        this->litStringHash=litStringHash;
+    }
+    ReducedConcatStringTree subString(int from, int to) const{
+        if(from<0 || to>this->length())throw out_of_range("Index of string is invalid!");
+        if(from>=to) throw logic_error("Invalid range!");
+        ReducedConcatStringTree temp(this->litStringHash,1);
+
+        temp.root= subString(this->root,from,to-1,0);
+        temp.reKey();
+
+        return temp;
+    };
+
+    ReducedConcatStringTree reverse() const{
+        ReducedConcatStringTree temp(this->litStringHash,1);
+        temp.root= reverse(this->root,0);
+        temp.reKey();
+        return temp;
+    };
+
+
     LitStringHash * litStringHash;
+
+   ReducedConcatStringTree concat(const ReducedConcatStringTree &otherS) const;
+
+   //Recur
+   ConcatStringTree::Node* subString(Node *root, int from, int to, int k) const {
+       if (!root)return nullptr;
+       RNode* newNode;
+       if(!k)
+           newNode= new RNode();
+       else
+           newNode= new RNode(1);
+
+       newNode->litStringHash=this->litStringHash;
+       if (root->data) {
+           long long size = to - from + 1;
+           char *tmp = new char[size+1];
+           for (int i = 0, j = from; i < size; i++, j++) {
+               tmp[i] = root->data[j];
+           }
+
+           tmp[size] = '\0';
+           newNode->LSData= newNode->litStringHash->Insert(tmp);
+           newNode->data=newNode->LSData->data;
+           newNode->len=size;
+           newNode->LL = root->LL;
+           return newNode;
+       }
+       if(to<root->LL){
+           newNode->pLeft=subString(root->pLeft,from,to,1);
+           if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
+       }
+       else if(from>=root->LL){
+           newNode->pRight= subString(root->pRight,from-root->LL,to-root->LL,1);
+           if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
+       }
+       else{
+           newNode->pLeft= subString(root->pLeft,from,root->LL-1,1);
+           if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
+           newNode->pRight= subString(root->pRight,0,to-root->LL,1);
+           if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
+       }
+       return newNode;
+   }
+
+    ConcatStringTree::Node* reverse(ConcatStringTree::Node *root,int k) const {
+        if(!root)return nullptr;
+        RNode* newNode;
+        if(!k)
+            newNode= new RNode();
+        else
+            newNode= new RNode(1);
+        newNode->litStringHash=this->litStringHash;
+        if(root->data){
+            int size= root->len;
+            char* tmp= new char[size+1];
+            for(int i=0;i<size;i++){
+                tmp[i]=root->data[size-i-1];
+            }
+            tmp[size]='\0';
+            newNode->LSData= newNode->litStringHash->Insert(tmp);
+            newNode->data=newNode->LSData->data;
+            newNode->len=size;
+            newNode->LL = root->LL;
+
+        }
+
+        newNode->pLeft= reverse(root->pRight,1);
+        if(newNode->pLeft)newNode->pLeft->ParTree->insertNode(newNode->ID);
+        newNode->pRight= reverse(root->pLeft,1);
+        if(newNode->pRight)newNode->pRight->ParTree->insertNode(newNode->ID);
+
+        return newNode;
+    }
+
+
+    class RNode:public Node{
+    public:
+        LitStringHash* litStringHash;
+        LitStringHash::LitString* LSData;
+        RNode():Node(){};
+        explicit RNode(const char* s, LitStringHash* litStringHash):Node(){
+            //TODO: Process Data
+            this->litStringHash=litStringHash;
+
+            this->LSData=this->litStringHash->Insert(s);
+            this->data=this->LSData->data;
+            string str(this->data);
+            this->len=str.length();
+        }
+        RNode(int i):Node(1){};
+        ~RNode(){
+            delData=0;
+
+                this->LSData->noRf-=1;
+                if(this->LSData->noRf==0){
+
+                    this->litStringHash->Remove(this->LSData);
+
+                }
+
+
+        }
+
+    };
+
 };
 
 
