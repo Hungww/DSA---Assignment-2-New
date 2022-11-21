@@ -174,13 +174,115 @@ void tc12(){
     ReducedConcatStringTree* b= new ReducedConcatStringTree("B",LSH);
     ReducedConcatStringTree* c= new ReducedConcatStringTree("A",LSH);
 }
-int main() {
-
+void tc13(){
     HashConfig hashConfig(
             2,
             0.5,
             0.5,
             0.75,
+            2,
+            10
+    );
+    LitStringHash * litStringHash = new LitStringHash(hashConfig);
+    ReducedConcatStringTree* d1= new ReducedConcatStringTree("Hello", litStringHash);
+    ReducedConcatStringTree* d2= new ReducedConcatStringTree(",_t", litStringHash);
+    ReducedConcatStringTree* d3= new ReducedConcatStringTree("his_is", litStringHash);
+    ReducedConcatStringTree* d4= new ReducedConcatStringTree("_an", litStringHash);
+    ReducedConcatStringTree* s1= new ReducedConcatStringTree(d1->concat(*d2));
+    ReducedConcatStringTree* s2= new ReducedConcatStringTree(d3->concat(*d4));
+    ReducedConcatStringTree* s3= new ReducedConcatStringTree(s1->concat(*s2));
+    ReducedConcatStringTree* s4= new ReducedConcatStringTree(s3->subString(0,s3->length()));
+    cout<<endl;
+
+}
+void tc14(){
+    HashConfig hashConfig(
+            2,
+            0.5,
+            0.5,
+            0.75,
+            2,
+            10
+    );
+    LitStringHash * litStringHash = new LitStringHash(hashConfig);
+    ReducedConcatStringTree* d1= new ReducedConcatStringTree("Hello",litStringHash);
+    ReducedConcatStringTree* d2= new ReducedConcatStringTree("This",litStringHash);
+    ReducedConcatStringTree* d3= new ReducedConcatStringTree("Is",litStringHash);
+    ReducedConcatStringTree* s1= new ReducedConcatStringTree(d1->concat(*d2));
+    ReducedConcatStringTree* s2= new ReducedConcatStringTree(s1->concat(*d1));
+    ReducedConcatStringTree* s3= new ReducedConcatStringTree(s2->concat(*d3));
+
+
+    delete s1;
+    delete s2;
+    delete d1;
+    delete d2;
+    delete d3;
+
+    delete s3;
+}
+void tc15(){
+
+
+        ConcatStringTree* d1= new ConcatStringTree("he");
+        ConcatStringTree* d2= new ConcatStringTree("t_");
+        ConcatStringTree* d3= new ConcatStringTree("_lai_sang_thu");
+        ConcatStringTree* s1= new ConcatStringTree(d1->concat(*d2));
+        ConcatStringTree* s2= new ConcatStringTree(s1->concat(*d1));
+        ConcatStringTree* s3= new ConcatStringTree(s2->concat(*d3));
+
+
+        delete s1;
+        delete s2;
+        delete d1;
+        delete d2;
+        delete d3;
+
+        delete s3;
+
+}
+void tc16(){
+    HashConfig hashConfig(
+            2,
+            0.5,
+            0.5,
+            0.75,
+            2,
+            10
+    );
+    LitStringHash * litStringHash = new LitStringHash(hashConfig);
+
+
+    ReducedConcatStringTree* d1= new ReducedConcatStringTree("he",litStringHash);
+    ReducedConcatStringTree* d2= new ReducedConcatStringTree("t_",litStringHash);
+    ReducedConcatStringTree* d3= new ReducedConcatStringTree("_lai_sang_thu",litStringHash);
+    ReducedConcatStringTree* s1= new ReducedConcatStringTree(d1->concat(*d2));
+    ReducedConcatStringTree* s2= new ReducedConcatStringTree(s1->concat(*d1));
+    ReducedConcatStringTree* s3= new ReducedConcatStringTree(s2->concat(*d3));
+
+
+    delete s1;
+    delete s2;
+    delete d1;
+    delete d2;
+
+    delete s3;
+
+
+
+    delete d3;
+    delete litStringHash;
+
+
+
+}
+void tcbkel(){
+
+    HashConfig hashConfig(
+            2,
+            0.5,
+            0.5,
+            0.7,
             2,
             4
     );
@@ -188,17 +290,41 @@ int main() {
     ReducedConcatStringTree * s1 = new ReducedConcatStringTree("a", litStringHash);
     ReducedConcatStringTree * s2 = new ReducedConcatStringTree("bb", litStringHash);
 
+
     cout << s1->toString() << endl;
     cout << s2->toString() << endl;
     ReducedConcatStringTree * s3 = new ReducedConcatStringTree("bb", litStringHash);
+    ReducedConcatStringTree * s4 = new ReducedConcatStringTree("cc", litStringHash);
+
 
     cout << litStringHash->getLastInsertedIndex() << endl;
     cout << litStringHash->toString() << endl;
 
-    delete litStringHash;
+
     delete s3;
     delete s1;
     delete s2;
+    delete litStringHash;
+}
+int main() {
+
+
+/*    HashConfig hashConfig(
+            2,
+            0.5,
+            0.5,
+            0.75,
+            2,
+            10
+    );
+    LitStringHash * litStringHash = new LitStringHash(hashConfig);
+    ReducedConcatStringTree s1("abc",litStringHash);     // id = 1
+    ReducedConcatStringTree s2("def",litStringHash);     // id = 2
+    ReducedConcatStringTree s3("ghj",litStringHash);     // id = 3
+    ReducedConcatStringTree s4 = s1.concat(s2).concat(s3);    // id = 4
+    ReducedConcatStringTree s5 = s4.reverse().reverse();
+    cout<<s5.toString();*/
+    tcbkel();
 
 
     return 0;

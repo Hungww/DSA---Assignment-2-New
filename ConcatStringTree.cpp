@@ -287,6 +287,8 @@ ConcatStringTree::ParentTree::ParNode* ConcatStringTree::ParentTree::deleteNode(
 }void ConcatStringTree::recurDestructor(ConcatStringTree::Node *&root) {
     {
         if(!root)return;
+
+        if(root->len<0 || root->ID<=0|| root->delData!=0&&root->delData!=1)return;
         if(root->ParTree->Size!=0)return;
         else{
             if(root->pLeft)root->pLeft->ParTree->deleteNode(root->ID);
@@ -342,6 +344,8 @@ ReducedConcatStringTree ReducedConcatStringTree::concat(const ReducedConcatStrin
     temp.root->LL=temp.root->pLeft->len;
     temp.root->pLeft->ParTree->insertNode(temp.root->ID);
     temp.root->pRight->ParTree->insertNode(temp.root->ID);
+
+
     return temp;
 
 }

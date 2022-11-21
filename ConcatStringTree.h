@@ -351,7 +351,7 @@ public:
         for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
     };
     ~LitStringHash(){
-        if(this->currentsize==0){
+        if(this->HashTable){
             for(int i=0;i<this->capacity;i++)delete HashTable[i];
             delete[] HashTable;
         }
@@ -394,9 +394,19 @@ public:
     }
 
     void reHash(){
+        int oldCap= this->capacity;
         this->capacity= this->capacity * this->alpha;
         LitString** oldTable= this->HashTable;
         this->HashTable=new LitString* [this->capacity];
+        for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
+        for(int i=0;i<oldCap;i++){
+            if(oldTable[i])InsertForRehash(oldTable[i]);
+            oldTable[i]= nullptr;
+        }
+        for(int i=0;i<oldCap;i++)oldTable[i]= nullptr;
+
+        delete[] oldTable;
+
     }
     LitString* Insert(const char* s){
         if(this->HashTable == nullptr){
@@ -420,7 +430,9 @@ public:
                 HashTable[idx]= new LitString(s,key);
                 this->LastInsertedIndex=idx;
                 currentsize++;
-                return HashTable[idx];
+                LitString* temp=HashTable[idx];
+                if((double(currentsize)/capacity)>lambda)reHash();
+                return temp;
                 break;
             }
             else if(HashTable[idx]){
@@ -434,7 +446,7 @@ public:
             }
         }
 
-
+        throw runtime_error("No possible slot");
     }
     void Remove(LitString* target){
         for(int i=0;i< this->capacity;i++){
@@ -451,16 +463,16 @@ public:
             this->HashTable= nullptr;
         }
     }
-    LitString* InsertForRehash(const char* s){
+    int InsertForRehash(LitString* s){
         if(this->HashTable == nullptr){
             HashTable= new LitString* [this->initSize];
             currentsize=0;
             capacity=this->initSize;
             for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
         }
-        int key= setKey(s);
+        int key= setKey(s->data);
         int hashIndex= HashKey(key);
-        string str1(s);
+        string str1(s->data);
         int idx=0;
 
         double temp=0;
@@ -469,22 +481,15 @@ public:
             idx=(int)temp;
             idx=idx%this->capacity;
             if(HashTable[idx]==nullptr){
-                HashTable[idx]= new LitString(s,key);
-                currentsize++;
-                return HashTable[idx];
+                HashTable[idx]= s ;
+
+                return idx;
                 break;
             }
-            else if(HashTable[idx]){
-                string str2(HashTable[idx]->data);
-                if(str1==str2){
-                    HashTable[idx]->noRf+=1;
-                    return HashTable[idx];
-                }
 
-
-            }
         }
 
+        throw runtime_error("No possible slot");
 
     }
 
@@ -493,7 +498,19 @@ public:
         return this->LastInsertedIndex;
     };
     string toString() const{
-        string s="a";
+        string s="LitStringHash[";
+        for(int i=0;i<this->capacity;i++){
+            if(HashTable[i]){
+                s+="(litS=";
+                s+='"';
+                s+=HashTable[i]->data;
+                s+='"';
+                s+=");";
+            }
+            else s+="();";
+        }
+        s.erase(s.end()-1,s.end());
+        s+="]";
         return s;
     };
 
@@ -549,8 +566,10 @@ public:     class RNode;
         this->litStringHash=litStringHash;
     }
     ReducedConcatStringTree(LitStringHash* litStringHash):ConcatStringTree(1){
-        this->root= new RNode();
         this->litStringHash=litStringHash;
+        this->root= new RNode(this->litStringHash);
+
+
     }
      ReducedConcatStringTree(const char * s, LitStringHash* litStringHash):ConcatStringTree(1){
         this->root= new RNode(s,litStringHash);
@@ -584,9 +603,9 @@ public:     class RNode;
        if (!root)return nullptr;
        RNode* newNode;
        if(!k)
-           newNode= new RNode();
+           newNode= new RNode(this-> litStringHash);
        else
-           newNode= new RNode(1);
+           newNode= new RNode(this-> litStringHash,1);
 
        newNode->litStringHash=this->litStringHash;
        if (root->data) {
@@ -624,9 +643,9 @@ public:     class RNode;
         if(!root)return nullptr;
         RNode* newNode;
         if(!k)
-            newNode= new RNode();
+            newNode= new RNode(this-> litStringHash);
         else
-            newNode= new RNode(1);
+            newNode= new RNode(this-> litStringHash,1);
         newNode->litStringHash=this->litStringHash;
         if(root->data){
             int size= root->len;
@@ -655,7 +674,11 @@ public:     class RNode;
     public:
         LitStringHash* litStringHash;
         LitStringHash::LitString* LSData;
-        RNode():Node(){};
+        RNode(LitStringHash* litStringHash):Node(){
+            this->litStringHash=litStringHash;
+            this->LSData= nullptr;
+            this->data= nullptr;
+        };
         explicit RNode(const char* s, LitStringHash* litStringHash):Node(){
             //TODO: Process Data
             this->litStringHash=litStringHash;
@@ -665,18 +688,20 @@ public:     class RNode;
             string str(this->data);
             this->len=str.length();
         }
-        RNode(int i):Node(1){};
+        RNode(LitStringHash* litStringHash,int i):Node(1){
+            this->litStringHash=litStringHash;
+            this->LSData= nullptr;
+            this->data= nullptr;
+        };
         ~RNode(){
-            delData=0;
-
+            if(LSData){
+                delData=0;
                 this->LSData->noRf-=1;
                 if(this->LSData->noRf==0){
-
                     this->litStringHash->Remove(this->LSData);
-
                 }
 
-
+            }
         }
 
     };
