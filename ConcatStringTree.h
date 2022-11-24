@@ -393,14 +393,17 @@ public:
         return key;
     }
 
-    void reHash(){
+    void reHash(int lastI){
         int oldCap= this->capacity;
         this->capacity= this->capacity * this->alpha;
         LitString** oldTable= this->HashTable;
         this->HashTable=new LitString* [this->capacity];
         for(int i=0;i<capacity;i++)HashTable[i]= nullptr;
         for(int i=0;i<oldCap;i++){
-            if(oldTable[i])InsertForRehash(oldTable[i]);
+            if(oldTable[i]){
+                int liidx=InsertForRehash(oldTable[i]);
+                if(i==lastI)this->LastInsertedIndex=liidx;
+            }
             oldTable[i]= nullptr;
         }
         for(int i=0;i<oldCap;i++)oldTable[i]= nullptr;
@@ -421,6 +424,15 @@ public:
         string str1(s);
         int idx=0;
 
+        for(int i=0;i< this->capacity;i++) {
+            if (HashTable[i]) {
+                string str2(HashTable[i]->data);
+                if (str1 == str2) {
+                    HashTable[i]->noRf += 1;
+                    return HashTable[i];
+                }
+            }
+        }
         double temp=0;
         for(int i=0;i<= this->capacity;i++){
             temp=hashIndex + this->c1*i + this->c2*i*i;
@@ -431,7 +443,7 @@ public:
                 this->LastInsertedIndex=idx;
                 currentsize++;
                 LitString* temp=HashTable[idx];
-                if((double(currentsize)/capacity)>lambda)reHash();
+                if((double(currentsize)/capacity)>lambda)reHash(idx);
                 return temp;
                 break;
             }
